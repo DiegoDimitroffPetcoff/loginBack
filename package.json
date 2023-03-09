@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "mongoose": "^7.0.1",
+    "nodemon": "^2.0.21",
+    "passport": "^0.6.0",
+    "passport-local": "^1.0.0"
+  },
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "name": "login-back",
+  "version": "1.0.0",
+  "description": "Login & Sigout Back ",
+  "main": "server.js",
+  "author": "Diego Dimitroff Petcoff",
+  "license": "ISC"
+}
