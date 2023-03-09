@@ -34,30 +34,27 @@ passport.use(
   new PassportLocal(async function (username, password, done) {
     let user = await UserModel.findOne({ username: username }, { username: 1 });
     let pass = await UserModel.findOne({ username: username }, { password: 1 });
-console.log(user);
-if(user){
-  console.log("EL USUARIO YA EXISTE");
-  return done(null, false);
-} else {
-  console.log("SE HA CREADO EL USUARIO")
+    console.log(user);
+    if (user) {
+      console.log("EL USUARIO YA EXISTE");
+      return done(null, false);
+    } else {
+      console.log("SE HA CREADO EL USUARIO");
+
+      const newUser = {
+        username: username,
+        password: password,
+      };
+
+      //TENGO QUE BUSCAR LA FORMA DE ENVIAR EL OBJETO CON EL ID
+
+      const userCreated = new UserModel(newUser);
+      userCreated.save()
 
 
-    const newUser = {
-      username: username,
-      password: password,
+      //tengo que lograr enviar todo el usuario
+      return done(null, userCreated);
     }
- 
-//TENGO QUE BUSCAR LA FORMA DE ENVIAR EL OBJETO CON EL ID
-    await UserModel.create(newUser, (err, userWithId) => {
-      console.log(userWithId)
-      if (err) {
-        console.log(`some issue happened: ${err}`);
-        return done(err);
-      }
-    return done(null, userWithId);})
-
-}
-
   })
 );
 
@@ -68,28 +65,45 @@ passport.use(
     let pass = await UserModel.findOne({ username: username }, { password: 1 });
 
     if (username == user.username && password == pass.password) {
-      console.log("EL USUARIO ya existe  EXISTE");
-      return done(null, false);
+
+
+
+      console.log("logeo correcto");
+
+
+
+
+      return done(null, user);
     } else {
       console.log("EL USUARIO NOOOO EXSTE");
+      console.log(user.username);
+      console.log(password.password);
       return done(null, false);
     }
   })
 );
 
-passport.serializeUser( (user, done) => {
-  
+passport.serializeUser((user, done) => {
   done(null, user._id);
 });
-passport.deserializeUser(async (id, done) => {
+passport.deserializeUser(async function (id, done) {
+  console.log("id............................");
+ let result = await UserModel.findById(id)
+ console.log(result)
 
-  await UserModel.findById(id,done)
+
+
+
 
 });
 
 module.exports = class Routes {
   constructor() {}
   start() {
+
+
+
+
     //vista general
     route.get("/", (req, res) => {
       res.send(
@@ -97,28 +111,62 @@ module.exports = class Routes {
       );
     });
 
-    //login get
+    //LOGIN get
     route.get("/login", (req, res) => {
       res.send("ACA DEBERIA ESTAR EL FORM PARA EL LOGEO");
     });
 
-    //login post
+    //LOGIN post
     route.post(
       "/login",
       passport.authenticate("login", {
-        successRedirect: "/test2",
-        failureRedirect: "/fail",
+        successRedirect: "/loginsuccess",
+        failureRedirect: "/loginfail",
       })
     );
 
-    //Registrarse post
+        //ruta de fallo
+        route.get("/loginfail", (req, res) => {
+          res.send("Algo salio mal en el logeo");
+        });
+
+                //ruta de EXITO
+                route.get("/loginsuccess", (req, res) => {
+                  res.send("LOGEADO CORRETAMENTE");
+                });
+
+    //REGISTRO get
+    route.get("/signout", (req, res) => {
+      res.send("REGISTRARSE. METODO POST");
+    });
+
+    //REGISTRO post
     route.post(
       "/signout",
       passport.authenticate("signout", {
-        successRedirect: "/test2",
-        failureRedirect: "/fail",
+        successRedirect: "/signoutsuccess",
+        failureRedirect: "/signoutfail",
       })
     );
+
+    
+        //ruta de fallo
+        route.get("/signoutfail", (req, res) => {
+          res.send("Algo salio mal en el registro");
+        });
+
+                //ruta de EXITO
+                route.get("/signoutsuccess", (req, res) => {
+                  res.send("REGISTRO CORRECTO");
+                });
+
+//CREAR RUTAS DE FAIL Y SUCCESS DE LOGIN Y SIGNOUT
+//PROBAR PRIMERO SIGNOUT
+
+
+
+
+
 
     //test
     route.get(
@@ -131,23 +179,11 @@ module.exports = class Routes {
       }
     );
 
-    //test2
-    route.get("/test2", (req, res) => {
-      if (req.isAuthenticated()) {
-        res.send("ESTA LOGEADO (test2)");
-      } else res.send("NO LOGEADO (test2)");
-    });
 
-    //test3
-    route.get("/test3", async (req, res) => {
-      await UserModel.findOne({ username: req.body.username });
-      res.send(await UserModel.findOne({ username: req.body.username }));
-    });
 
-    //ruta de fallo
-    route.get("/fail", (req, res) => {
-      res.send("Algo salio mal en el logeo");
-    });
+
+
+
 
     return route;
   }
