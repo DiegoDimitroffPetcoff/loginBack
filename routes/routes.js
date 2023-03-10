@@ -49,8 +49,7 @@ passport.use(
       //TENGO QUE BUSCAR LA FORMA DE ENVIAR EL OBJETO CON EL ID
 
       const userCreated = new UserModel(newUser);
-      userCreated.save()
-
+      userCreated.save();
 
       //tengo que lograr enviar todo el usuario
       return done(null, userCreated);
@@ -61,49 +60,44 @@ passport.use(
 passport.use(
   "login",
   new PassportLocal(async function (username, password, done) {
-    let user = await UserModel.findOne({ username: username }, { username: 1 });
-    let pass = await UserModel.findOne({ username: username }, { password: 1 });
+    let user = await UserModel.findOne(
+      { username: username },
+      { username: 1, password: 1 }
+    );
 
-    if (username == user.username && password == pass.password) {
-
-
-
-      console.log("logeo correcto");
-
-
-
-
-      return done(null, user);
+    //Primero corroboro que user no venga con un valor null, si llega con un valor null pasa directamente
+    //al else. Si llega con un valor paso a compararlo con la DBS para retornar los valores
+    if (user) {
+      if (username === user.username && password === user.password) {
+        console.log("logeo correcto");
+        return done(null, user);
+      } else {
+        console.log("Username Or Password incorrect");
+        return done(null, false);
+      }
     } else {
-      console.log("EL USUARIO NOOOO EXSTE");
-      console.log(user.username);
-      console.log(password.password);
+      console.log("Username Or Password incorrect");
       return done(null, false);
     }
   })
 );
 
+//Passport va a serializar el usuario.. lo que yo mando desde la estrategia va a ir a parar a "user" en la siguiente funcion.
+//luego lo va a deseralizar... a ese mismo valor que eligo enviar para volver a encontrarlo con mongo: en este caso busca al
+//usuario deserializado mediante FindById()
+
 passport.serializeUser((user, done) => {
   done(null, user._id);
 });
+
 passport.deserializeUser(async function (id, done) {
-  console.log("id............................");
- let result = await UserModel.findById(id)
- console.log(result)
-
-
-
-
-
+  let result = await UserModel.findById(id);
+  done(null, result);
 });
 
 module.exports = class Routes {
   constructor() {}
   start() {
-
-
-
-
     //vista general
     route.get("/", (req, res) => {
       res.send(
@@ -125,19 +119,19 @@ module.exports = class Routes {
       })
     );
 
-        //ruta de fallo
-        route.get("/loginfail", (req, res) => {
-          res.send("Algo salio mal en el logeo");
-        });
+    //ruta de fallo
+    route.get("/loginfail", (req, res) => {
+      res.send("Username Or Password incorrect");
+    });
 
-                //ruta de EXITO
-                route.get("/loginsuccess", (req, res) => {
-                  res.send("LOGEADO CORRETAMENTE");
-                });
+    //ruta de EXITO
+    route.get("/loginsuccess", (req, res) => {
+      res.send("Login success");
+    });
 
     //REGISTRO get
     route.get("/signout", (req, res) => {
-      res.send("REGISTRARSE. METODO POST");
+      res.send("Aca deberia estar la tabla de registro");
     });
 
     //REGISTRO post
@@ -149,41 +143,23 @@ module.exports = class Routes {
       })
     );
 
-    
-        //ruta de fallo
-        route.get("/signoutfail", (req, res) => {
-          res.send("Algo salio mal en el registro");
-        });
+    //ruta de fallo
+    route.get("/signoutfail", (req, res) => {
+      res.send("Algo salio mal en el registro");
+    });
 
-                //ruta de EXITO
-                route.get("/signoutsuccess", (req, res) => {
-                  res.send("REGISTRO CORRECTO");
-                });
+    //ruta de EXITO
+    route.get("/signoutsuccess", (req, res) => {
+      res.send("REGISTRO CORRECTO");
+    });
 
-//CREAR RUTAS DE FAIL Y SUCCESS DE LOGIN Y SIGNOUT
-//PROBAR PRIMERO SIGNOUT
-
-
-
-
-
+    //CREAR RUTAS DE FAIL Y SUCCESS DE LOGIN Y SIGNOUT
+    //PROBAR PRIMERO SIGNOUT
 
     //test
-    route.get(
-      "/test",
-      (req, res, next) => {
-        if (req.isAuthenticated()) return next(), res.send("NO LOGEADO");
-      },
-      (req, res) => {
-        res.send("ESTA LOGEADO");
-      }
-    );
+    //HACER RUTA TEST DE VUELTA
 
-
-
-
-
-
+    
 
     return route;
   }
