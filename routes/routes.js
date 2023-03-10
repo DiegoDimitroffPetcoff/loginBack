@@ -33,25 +33,19 @@ passport.use(
   "signout",
   new PassportLocal(async function (username, password, done) {
     let user = await UserModel.findOne({ username: username }, { username: 1 });
-    let pass = await UserModel.findOne({ username: username }, { password: 1 });
+
     console.log(user);
     if (user) {
       console.log("EL USUARIO YA EXISTE");
       return done(null, false);
     } else {
       console.log("SE HA CREADO EL USUARIO");
-
       const newUser = {
         username: username,
-        password: password,
+        password: createHash(password),
       };
-
-      //TENGO QUE BUSCAR LA FORMA DE ENVIAR EL OBJETO CON EL ID
-
       const userCreated = new UserModel(newUser);
       userCreated.save();
-
-      //tengo que lograr enviar todo el usuario
       return done(null, userCreated);
     }
   })
@@ -65,10 +59,15 @@ passport.use(
       { username: 1, password: 1 }
     );
 
+
+let passValidate = validatePass(user.password, password)
+
+console.log("CONTRASENA:::::")
+console.log(passValidate);
     //Primero corroboro que user no venga con un valor null, si llega con un valor null pasa directamente
     //al else. Si llega con un valor paso a compararlo con la DBS para retornar los valores
     if (user) {
-      if (username === user.username && password === user.password) {
+      if (username === user.username && passValidate === true) {
         console.log("logeo correcto");
         return done(null, user);
       } else {
@@ -153,13 +152,15 @@ module.exports = class Routes {
       res.send("REGISTRO CORRECTO");
     });
 
-    //CREAR RUTAS DE FAIL Y SUCCESS DE LOGIN Y SIGNOUT
-    //PROBAR PRIMERO SIGNOUT
-
-    //test
-    //HACER RUTA TEST DE VUELTA
-
     
+    //RUTA TEST
+    route.post("/test", (req, res) => {
+      if (req.isAuthenticated()) {
+        res.send(" LOGEADO");
+      } else {
+        res.send("NO ESTAS LOGEADO");
+      }
+    });
 
     return route;
   }
