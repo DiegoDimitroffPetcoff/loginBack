@@ -1,7 +1,8 @@
 const express = require("express");
 const route = express();
 const cookieParser = require("cookie-parser");
-const session = require("express-session");
+const session = require('express-session')
+const MemoryStore = require('memorystore')(session)
 const passport = require("passport");
 const PassportLocal = require("passport-local").Strategy;
 const validatePass = require("../src/utils/passValidatos");
@@ -29,9 +30,19 @@ route.use(cookieParser("secreto"));
 //   })
 // );
 
+// route.use(session({
+//   name: 'session',
+//   keys: ['key1', 'key2']
+// }))
+
+
 route.use(session({
-  name: 'session',
-  keys: ['key1', 'key2']
+  cookie: { maxAge: 86400000 },
+  store: new MemoryStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+  resave: false,
+  secret: 'keyboard cat'
 }))
 
 //Inicializacion
