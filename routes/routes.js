@@ -15,19 +15,24 @@ route.use(express.urlencoded({ extended: true }));
 route.use(cookieParser("secreto"));
 
 //config session
-route.use(
-  session({
-    secret: "diego",
-    cookie:{
-      httpOnly: false,
-      secure: false,
-      maxAge: 999999999
-    },
-    rolling: true,
-    resave: true,
-    saveUninitialized: true,
-  })
-);
+// route.use(
+//   session({
+//     secret: "diego",
+//     cookie:{
+//       httpOnly: false,
+//       secure: false,
+//       maxAge: 999999999
+//     },
+//     rolling: true,
+//     resave: true,
+//     saveUninitialized: true,
+//   })
+// );
+
+route.use(session({
+  name: 'session',
+  keys: ['key1', 'key2']
+}))
 
 //Inicializacion
 route.use(passport.initialize());
