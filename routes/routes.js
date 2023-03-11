@@ -18,6 +18,12 @@ route.use(cookieParser("secreto"));
 route.use(
   session({
     secret: "diego",
+    cookie:{
+      httpOnly: false,
+      secure: false,
+      maxAge: 999999999
+    },
+    rolling: true,
     resave: true,
     saveUninitialized: true,
   })
