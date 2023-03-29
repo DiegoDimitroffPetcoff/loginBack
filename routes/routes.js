@@ -1,8 +1,8 @@
 const express = require("express");
 const route = express();
 const cookieParser = require("cookie-parser");
-const session = require('express-session')
-const MemoryStore = require('memorystore')(session)
+const session = require("express-session");
+const MemoryStore = require("memorystore")(session);
 const passport = require("passport");
 const PassportLocal = require("passport-local").Strategy;
 const validatePass = require("../src/utils/passValidatos");
@@ -35,17 +35,18 @@ route.use(cookieParser("secreto"));
 //   keys: ['key1', 'key2']
 // }))
 
+route.use(
+  session({
+    cookie: { maxAge: 86400000 },
+    store: new MemoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
+    }),
 
-route.use(session({
-  cookie: { maxAge: 86400000 },
-  store: new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
-  }),
- 
-  secret: 'keyboard cat',
-  resave: true,
-  saveUninitialized: true
-}))
+    secret: "keyboard cat",
+    resave: true,
+    saveUninitialized: true,
+  })
+);
 
 //Inicializacion
 route.use(passport.initialize());
@@ -83,16 +84,14 @@ passport.use(
       { username: 1, password: 1 }
     );
 
+    //let passValidate = validatePass(user.password, password)
 
-let passValidate = validatePass(user.password, password)
-
-console.log("CONTRASENA:::::")
-console.log(passValidate);
     //Primero corroboro que user no venga con un valor null, si llega con un valor null pasa directamente
     //al else. Si llega con un valor paso a compararlo con la DBS para retornar los valores
     if (user) {
+      let passValidate = validatePass(user.password, password);
+
       if (username === user.username && passValidate === true) {
-        console.log("logeo correcto");
         return done(null, user);
       } else {
         console.log("Username Or Password incorrect");
@@ -137,9 +136,15 @@ module.exports = class Routes {
     route.post(
       "/login",
       passport.authenticate("login", {
-        successRedirect: "/loginsuccess",
         failureRedirect: "/loginfail",
-      })
+      }),
+      function (req, res) {
+        console.log("Desde:: ");
+
+        console.log(session.Store);
+        const { username, password } = req.body;
+        res.send(req.user);
+      }
     );
 
     //ruta de fallo
@@ -149,7 +154,7 @@ module.exports = class Routes {
 
     //ruta de EXITO
     route.get("/loginsuccess", (req, res) => {
-      res.send("Login success");
+      res.status(400).send(req.user);
     });
 
     //REGISTRO get
@@ -176,13 +181,14 @@ module.exports = class Routes {
       res.send("REGISTRO CORRECTO");
     });
 
-    
     //RUTA TEST
-    route.post("/test", (req, res) => {
+    route.get("/test", (req, res) => {
       if (req.isAuthenticated()) {
-        res.send(" LOGEADO");
+        console.log("test LOGEADO");
+        res.send(res.user);
       } else {
-        res.send("NO ESTAS LOGEADO");
+        console.log("no logeado");
+        res.send("no logeado");
       }
     });
 
