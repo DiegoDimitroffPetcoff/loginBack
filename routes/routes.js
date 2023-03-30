@@ -42,7 +42,7 @@ route.use(
       checkPeriod: 86400000, // prune expired entries every 24h
     }),
 
-    secret: "keyboard cat",
+    secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
   })
@@ -56,7 +56,12 @@ route.use(passport.session());
 
 passport.use(
   "signout",
-  new PassportLocal(async function (username, password, done) {
+  new PassportLocal({ passReqToCallback: true }, async function (
+    req,
+    username,
+    password,
+    done
+  ) {
     let user = await UserModel.findOne({ username: username }, { username: 1 });
 
     console.log(user);
@@ -68,6 +73,10 @@ passport.use(
       const newUser = {
         username: username,
         password: createHash(password),
+        email: req.body.email,
+        firstName: req.body.firstName,
+        secondName: req.body.secondName,
+        cellphone: req.body.cellphone,
       };
       const userCreated = new UserModel(newUser);
       userCreated.save();
