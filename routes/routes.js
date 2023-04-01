@@ -8,6 +8,7 @@ const PassportLocal = require("passport-local").Strategy;
 const validatePass = require("../src/utils/passValidatos");
 const createHash = require("../src/utils/hashGenerator");
 const UserModel = require("../src/models/users");
+const { Session } = require("express-session");
 
 route.use(express.json());
 route.use(express.urlencoded({ extended: true }));
@@ -63,7 +64,7 @@ passport.use(
     done
   ) {
     let user = await UserModel.findOne({ username: username }, { username: 1 });
-
+    console.log("DESDE PASSTPOR SIGNOUT");
     console.log(user);
     if (user) {
       console.log("EL USUARIO YA EXISTE");
@@ -88,10 +89,7 @@ passport.use(
 passport.use(
   "login",
   new PassportLocal(async function (username, password, done) {
-    let user = await UserModel.findOne(
-      { username: username },
-      { username: 1, password: 1 }
-    );
+    let user = await UserModel.findOne({ username: username });
 
     //let passValidate = validatePass(user.password, password)
 
@@ -147,11 +145,8 @@ module.exports = class Routes {
       passport.authenticate("login", {
         failureRedirect: "/loginfail",
       }),
-      function (req, res) {
-        console.log("Desde:: ");
-
-        console.log(session.Store);
-        const { username, password } = req.body;
+      async function (req, res) {
+        //req.user envia todo el objeto al front
         res.send(req.user);
       }
     );
@@ -175,9 +170,11 @@ module.exports = class Routes {
     route.post(
       "/signout",
       passport.authenticate("signout", {
-        successRedirect: "/signoutsuccess",
         failureRedirect: "/signoutfail",
-      })
+      }),
+      function (req, res) {
+        res.send(req.user);
+      }
     );
 
     //ruta de fallo
